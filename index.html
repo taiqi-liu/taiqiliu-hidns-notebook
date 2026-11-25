@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>研究笔记本 · Taiqi Liu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@600;700;900&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbfaf7;
+    --bg-panel:#fbfaf7;
+    --bg-hover:#f1eee6;
+    --bg-code:#f3f0e8;
+    --text:#2b2b28;
+    --text-2:#5c5a52;
+    --text-3:#8a877c;
+    --border:#e3ded0;
+    --border-strong:#d4cdbb;
+    --accent:#284b63;
+    --accent-hover:#1d3648;
+    --accent-soft:#e8edef;
+    --tag-bg:#efede6;
+    --graph-line:#c9c4b4;
+    --graph-node:#a8a393;
+    --serif:"Noto Serif SC","Source Serif 4","Songti SC","STSong",Georgia,serif;
+    --sans:"Noto Sans SC",-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1c1c1a;
+      --bg-panel:#1c1c1a;
+      --bg-hover:#2a2a26;
+      --bg-code:#262622;
+      --text:#e6e3da;
+      --text-2:#b3b0a4;
+      --text-3:#85827a;
+      --border:#33332e;
+      --border-strong:#45453f;
+      --accent:#8fb6cc;
+      --accent-hover:#b7d3e2;
+      --accent-soft:#24333c;
+      --tag-bg:#2a2a26;
+      --graph-line:#4a4a43;
+      --graph-node:#6f6d62;
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:var(--sans);font-size:16px;line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent);text-decoration:none}
+  a:hover{color:var(--accent-hover);text-decoration:underline;text-underline-offset:3px}
+  button{font-family:inherit;cursor:pointer;background:none;border:none;color:inherit}
+  ::selection{background:var(--accent-soft)}
+
+  /* ---------- layout ---------- */
+  .page{
+    display:grid;
+    grid-template-columns:264px minmax(0,1fr) 288px;
+    gap:2.75rem;
+    max-width:1440px;margin:0 auto;
+    padding:0 1.75rem;
+    align-items:start;
+  }
+  .sidebar-left,.sidebar-right{
+    position:sticky;top:0;
+    max-height:100vh;overflow-y:auto;
+    padding:1.75rem 0 2.5rem;
+    scrollbar-width:thin;
+  }
+  .center{min-width:0;padding:1.75rem 0 3rem}
+
+  /* ---------- left: brand + search + explorer ---------- */
+  .brand{margin-bottom:1.4rem}
+  .brand h1{
+    font-family:var(--serif);font-weight:900;
+    font-size:1.55rem;line-height:1.3;margin:0;letter-spacing:.01em;
+  }
+  .brand h1 a{color:var(--text);text-decoration:none}
+  .brand h1 a:hover{color:var(--accent);text-decoration:none}
+  .brand .sub{margin:.3rem 0 0;font-size:.86rem;color:var(--text-2)}
+  .brand .sub .en{font-family:var(--serif)}
+
+  .search{position:relative;margin-bottom:1.5rem}
+  .search svg{
+    position:absolute;left:.65rem;top:50%;transform:translateY(-50%);
+    width:15px;height:15px;color:var(--text-3);pointer-events:none;
+  }
+  .search input{
+    width:100%;min-height:38px;
+    padding:.45rem .7rem .45rem 2.1rem;
+    font-family:inherit;font-size:.9rem;color:var(--text);
+    background:var(--bg-panel);border:1px solid var(--border-strong);border-radius:4px;
+    outline:none;
+  }
+  .search input:focus{border-color:var(--accent)}
+  .search input::placeholder{color:var(--text-3)}
+  .search-results{
+    position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:40;
+    background:var(--bg);border:1px solid var(--border-strong);border-radius:4px;
+    box-shadow:0 8px 24px rgba(30,28,20,.10);
+    max-height:320px;overflow-y:auto;display:none;
+  }
+  .search-results.open{display:block}
+  .search-results button{
+    display:block;width:100%;text-align:left;
+    padding:.55rem .8rem;min-height:40px;
+    border-bottom:1px solid var(--border);
+  }
+  .search-results button:last-child{border-bottom:none}
+  .search-results button:hover,.search-results button.active{background:var(--bg-hover)}
+  .search-results .r-title{display:block;font-size:.9rem;font-weight:500;color:var(--text);line-height:1.45}
+  .search-results .r-snip{display:block;font-size:.78rem;color:var(--text-2);line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .search-results .r-none{padding:.7rem .8rem;font-size:.85rem;color:var(--text-3)}
+
+  .explorer-label{
+    font-size:.78rem;color:var(--text-3);letter-spacing:.06em;
+    margin:0 0 .5rem;font-weight:500;
+  }
+  .folder{margin-bottom:.15rem}
+  .folder-head{
+    display:flex;align-items:center;gap:.35rem;width:100%;
+    min-height:36px;padding:.3rem .4rem;border-radius:4px;
+    font-size:.92rem;font-weight:700;color:var(--text);text-align:left;
+  }
+  .folder-head:hover{background:var(--bg-hover)}
+  .folder-head .chev{
+    width:12px;height:12px;flex:none;color:var(--text-3);
+    transition:transform .15s ease;
+  }
+  .folder.closed .folder-head .chev{transform:rotate(-90deg)}
+  .folder-head .count{margin-left:auto;font-size:.75rem;font-weight:400;color:var(--text-3)}
+  .folder-items{margin:0 0 .35rem .55rem;padding-left:.75rem;border-left:1px solid var(--border)}
+  .folder.closed .folder-items{display:none}
+  .note-link{
+    display:block;width:100%;text-align:left;
+    min-height:36px;padding:.38rem .5rem;border-radius:4px;
+    font-size:.9rem;line-height:1.5;color:var(--text-2);
+  }
+  .note-link:hover{background:var(--bg-hover);color:var(--text);text-decoration:none}
+  .note-link.active{color:var(--accent);font-weight:500;background:var(--accent-soft)}
+  .root-link{margin-bottom:.6rem}
+
+  .left-foot{
+    margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border);
+    font-size:.8rem;color:var(--text-3);line-height:1.7;
+  }
+
+  /* ---------- center: article ---------- */
+  .crumb{font-size:.85rem;color:var(--text-3);margin:0 0 .9rem}
+  .crumb a{color:var(--text-3)}
+  .crumb a:hover{color:var(--accent)}
+  .crumb .sep{margin:0 .4rem}
+  article h1{
+    font-family:var(--serif);font-weight:900;
+    font-size:2rem;line-height:1.35;margin:0 0 .6rem;letter-spacing:.01em;
+  }
+  .meta{
+    display:flex;flex-wrap:wrap;gap:.4rem 1.1rem;align-items:center;
+    font-size:.85rem;color:var(--text-3);
+    padding-bottom:1.1rem;margin-bottom:1.6rem;border-bottom:1px solid var(--border);
+  }
+  .meta .tags{display:flex;flex-wrap:wrap;gap:.35rem}
+  .tag{
+    display:inline-flex;align-items:center;min-height:26px;
+    padding:.08rem .55rem;border-radius:999px;
+    background:var(--tag-bg);color:var(--text-2);
+    font-size:.78rem;line-height:1.4;border:none;
+  }
+  button.tag:hover{color:var(--accent);background:var(--accent-soft)}
+  .body p{margin:0 0 1.15rem}
+  .body h2{
+    font-family:var(--serif);font-weight:700;font-size:1.3rem;line-height:1.45;
+    margin:1.9rem 0 .7rem;
+  }
+  .body h3{
+    font-family:var(--serif);font-weight:700;font-size:1.08rem;
+    margin:1.5rem 0 .5rem;
+  }
+  .body ul,.body ol{margin:0 0 1.15rem;padding-left:1.4rem}
+  .body li{margin-bottom:.35rem}
+  .body code{
+    font-family:var(--mono);font-size:.86em;
+    background:var(--bg-code);padding:.1em .35em;border-radius:3px;
+  }
+  .body blockquote{
+    margin:0 0 1.15rem;padding:.2rem 0 .2rem 1rem;
+    border-left:3px solid var(--border-strong);color:var(--text-2);
+  }
+  .body hr{border:none;border-top:1px solid var(--border);margin:1.8rem 0}
+  a.wikilink{
+    color:var(--accent);
+    background:var(--accent-soft);
+    padding:0 .28em;border-radius:3px;
+    text-decoration:none;font-weight:500;
+  }
+  a.wikilink:hover{text-decoration:underline;text-underline-offset:3px}
+  a.wikilink::before{content:"";}
+
+  .section-head{
+    font-family:var(--serif);font-weight:700;font-size:1.15rem;
+    margin:2.2rem 0 .8rem;padding-top:1.4rem;border-top:1px solid var(--border);
+  }
+  .recent-list{list-style:none;margin:0;padding:0}
+  .recent-list li{
+    display:flex;justify-content:space-between;gap:1rem;align-items:baseline;
+    padding:.5rem 0;border-bottom:1px dotted var(--border-strong);
+  }
+  .recent-list li:last-child{border-bottom:none}
+  .recent-list .r-date{font-size:.8rem;color:var(--text-3);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .recent-list .r-cat{font-size:.8rem;color:var(--text-3)}
+
+  .tag-listing{list-style:none;margin:0;padding:0}
+  .tag-listing li{padding:.6rem 0;border-bottom:1px dotted var(--border-strong)}
+  .tag-listing li:last-child{border-bottom:none}
+  .tag-listing .t-cat{font-size:.8rem;color:var(--text-3);margin-left:.5rem}
+
+  .article-foot{
+    margin-top:3rem;padding-top:1.1rem;border-top:1px solid var(--border);
+    font-size:.82rem;color:var(--text-3);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;
+  }
+
+  /* ---------- right: graph + links ---------- */
+  .panel{margin-bottom:1.9rem}
+  .panel h3{
+    font-size:.8rem;font-weight:700;letter-spacing:.06em;
+    color:var(--text-2);margin:0 0 .65rem;
+    font-family:var(--sans);
+  }
+  .graph-box{
+    border:1px solid var(--border);border-radius:4px;
+    background:var(--bg-panel);
+  }
+  .graph-box svg{display:block;width:100%;height:auto}
+  .graph-box .g-line{stroke:var(--graph-line);stroke-width:1}
+  .graph-box .g-node{fill:var(--graph-node);cursor:pointer}
+  .graph-box .g-node:hover{fill:var(--accent)}
+  .graph-box .g-node.current{fill:var(--accent)}
+  .graph-box .g-ring{fill:none;stroke:var(--accent);stroke-width:1;opacity:.55}
+  .graph-box .g-label{
+    font-size:8.5px;fill:var(--text-2);text-anchor:middle;
+    font-family:var(--sans);pointer-events:none;
+  }
+  .graph-box .g-hit{fill:transparent;cursor:pointer}
+  .link-list{list-style:none;margin:0;padding:0}
+  .link-list li{margin-bottom:.15rem}
+  .link-list a,.link-list button.linklike{
+    display:block;width:100%;text-align:left;
+    min-height:34px;padding:.32rem .45rem;border-radius:4px;
+    font-size:.88rem;line-height:1.5;color:var(--text-2);
+  }
+  .link-list a:hover,.link-list button.linklike:hover{background:var(--bg-hover);color:var(--accent);text-decoration:none}
+  .link-list .empty{font-size:.85rem;color:var(--text-3);padding:.2rem .45rem}
+  .all-tags{display:flex;flex-wrap:wrap;gap:.35rem}
+
+  footer.site-foot{display:none}
+
+  /* ---------- responsive ---------- */
+  .mobile-top{display:none}
+  @media (max-width:1080px){
+    .page{grid-template-columns:232px minmax(0,1fr);gap:2rem}
+    .sidebar-right{grid-column:2;position:static;max-height:none;padding:0 0 3rem;overflow:visible}
+    .center{padding-bottom:1rem}
+  }
+  @media (max-width:760px){
+    .page{display:block;padding:0 1.1rem}
+    .mobile-top{
+      display:block;padding:1.2rem 0 0;
+    }
+    .mobile-top .brand{margin-bottom:1rem}
+    .sidebar-left{position:static;max-height:none;overflow:visible;padding:0 0 1.2rem}
+    .sidebar-left .brand{display:none}
+    .sidebar-left .left-foot{display:none}
+    .sidebar-right{padding:0 0 2.5rem}
+    .center{padding:.4rem 0 1.5rem}
+    article h1{font-size:1.65rem}
+    .search-results{position:static;box-shadow:none;margin-top:.4rem}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto}
+    *{transition:none !important}
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- mobile header (same brand block, shown only on narrow screens) -->
+  <div class="mobile-top" aria-hidden="true">
+    <div class="brand">
+      <h1><a href="#note=index">研究笔记本</a></h1>
+      <p class="sub"><span class="en">Taiqi Liu</span> 的研究笔记本</p>
+    </div>
+  </div>
+
+  <!-- ============ LEFT ============ -->
+  <aside class="sidebar-left">
+    <div class="brand">
+      <h1><a href="#note=index">研究笔记本</a></h1>
+      <p class="sub"><span class="en">Taiqi Liu</span> 的研究笔记本</p>
+    </div>
+
+    <div class="search" role="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+      <input id="searchInput" type="search" placeholder="搜索笔记…" autocomplete="off" aria-label="搜索笔记" />
+      <div class="search-results" id="searchResults" role="listbox"></div>
+    </div>
+
+    <p class="explorer-label">笔记目录</p>
+    <nav id="explorer" aria-label="笔记目录"></nav>
+
+    <div class="left-foot">
+      共 <span id="noteCount"></span> 篇笔记<br>
+      用 [[双链]] 互相引用，随想随记。
+    </div>
+  </aside>
+
+  <!-- ============ CENTER ============ -->
+  <main class="center">
+    <p class="crumb" id="crumb"></p>
+    <article>
+      <h1 id="noteTitle"></h1>
+      <div class="meta" id="noteMeta"></div>
+      <div class="body" id="noteBody"></div>
+      <div id="noteExtra"></div>
+      <div class="article-foot">
+        <span>© Taiqi Liu</span>
+        <span id="footUpdated"></span>
+      </div>
+    </article>
+  </main>
+
+  <!-- ============ RIGHT ============ -->
+  <aside class="sidebar-right">
+    <div class="panel">
+      <h3>关系图</h3>
+      <div class="graph-box" id="graphBox"></div>
+    </div>
+    <div class="panel">
+      <h3>反向链接</h3>
+      <ul class="link-list" id="backlinks"></ul>
+    </div>
+    <div class="panel">
+      <h3>本文链接到</h3>
+      <ul class="link-list" id="outlinks"></ul>
+    </div>
+    <div class="panel">
+      <h3>标签</h3>
+      <div class="all-tags" id="allTags"></div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+/* ================= 笔记数据 =================
+   正文里用 [[笔记标题]] 表示双向链接，渲染时自动转成可点链接，
+   反向链接与关系图都由这些链接自动生成。 */
+var NOTES = [
+  {
+    id: "index",
+    title: "首页",
+    category: "",
+    date: "2026-11-21",
+    tags: ["索引"],
+    body:
+"<p>这里是 Taiqi Liu 的研究笔记本，记录铁电 / 反铁电存储方向的阅读与实验笔记。内容以概念梳理和测试方法为主，不求全，只求每篇都写清楚一件事。</p>" +
+"<p>笔记按三个目录存放：<strong>铁电存储</strong>放现象与机制，从[[反铁电电容的双电滞回线]]这类基本图像讲起；<strong>实验方法</strong>放测试与数据处理，比如[[P–E 回线参数提取]]和[[P–E 测试设置]]；<strong>论文笔记</strong>放读文献时的综述式整理，目前有一篇[[HZO 反铁电研究要点]]。</p>" +
+"<p>笔记之间用双链互相引用：在一篇里点带底色的词就能跳到对应的那篇，每篇右侧会列出哪些笔记引用了它。没有先后顺序，从任何一篇开始读都可以，顺着链接走就是。</p>"
+  },
+  {
+    id: "double-loop",
+    title: "反铁电电容的双电滞回线",
+    category: "铁电存储",
+    date: "2026-11-19",
+    tags: ["反铁电", "HZO", "P–E 回线"],
+    body:
+"<p>反铁电（antiferroelectric, AFE）的 P–E 回线和铁电最直观的区别是形状：铁电是单回线，零场下有剩余极化；反铁电在零场附近极化接近零，加场后极化陡然上升，撤场时又陡然落回，形成左右对称的<strong>双电滞回线</strong>（double hysteresis loop）。微观上，零场时相邻偶极反平行排列、净极化抵消；外场足够大时发生场致 AFE→FE 相变，偶极翻转到同向，极化随之跳升。</p>" +
+"<h2>两个转变场</h2>" +
+"<p>双回线上有两个关键场强：加场支上相变发生的场记为 <code>E_AF</code>（AFE 转 FE），撤场支上变回来的场记为 <code>E_FA</code>（FE 转 AFE），且总有 E_AF &gt; E_FA。两者之差 ΔE = E_AF − E_FA 是相变的迟滞宽度，反映相变能垒和损耗；回线越“瘦”，ΔE 越小。具体的读数方法见[[P–E 回线参数提取]]，测试条件怎么设见[[P–E 测试设置]]。</p>" +
+"<p>在 HZO 薄膜里，这种行为通常和四方相（t 相）在场下转变成极性正交相（o 相）联系在一起：成分、膜厚、掺杂、电极应力都会改变两相的相对稳定性，所以同一套工艺里回线形状漂移并不奇怪。研究脉络的梳理见[[HZO 反铁电研究要点]]。</p>" +
+"<h2>对存储意味着什么</h2>" +
+"<p>对存储应用，双回线是一把双刃剑。好处是零场极化近零、回线陡峭，转变前后极化差大，读出信号明确，而且零场状态唯一，不存在铁电那种上下两个剩余极化态之间的保持问题；代价是写入必须把场加到 E_AF 以上，工作电压偏高，且每次读写都要跨越一次相变，[[耐久与疲劳]]需要单独评估。另外循环初期回线形状还会随循环变化，这和[[唤醒效应]]有关，比较数据时要先确认样品处于什么状态。</p>"
+  },
+  {
+    id: "wake-up",
+    title: "唤醒效应",
+    category: "铁电存储",
+    date: "2026-11-18",
+    tags: ["HZO", "wake-up", "氧空位"],
+    body:
+"<p>唤醒效应（wake-up）指 HZO 铁电电容在最初一段电场循环里，剩余极化随循环次数逐渐增大、原本捏合（pinched）的回线慢慢打开的现象。刚做好的器件（pristine 状态）回线常常是收腰的，看起来甚至有点像[[反铁电电容的双电滞回线]]；循环到 10<sup>2</sup>–10<sup>5</sup> 次量级后，2Pr 上升并趋于稳定，器件才进入正常工作状态。</p>" +
+"<h2>机制的几种通说</h2>" +
+"<p>目前没有单一解释能覆盖所有样品，文献里反复出现的有三条：一是<strong>氧空位再分布</strong>——界面附近聚集的氧空位在循环中被打散，原先被钉扎的畴解钉，内建偏置场减弱，回线从偏移、捏合变得对称；二是<strong>场致相变</strong>——薄膜里残留的非极性四方相在反复加场下逐步转成极性正交相，可开关的铁电相比例上升；三是<strong>界面层变化</strong>，电极界面死层在循环中被部分击穿或重构。三者并不互斥，哪个占主导取决于掺杂、退火和电极等工艺条件。</p>" +
+"<p>实际做实验时，wake-up 最大的影响是让“第几次循环测的数据”变成必须记录的变量：同一只器件 pristine 和 woken-up 两种状态的 Pr、矫顽场可以差很多，不注明循环历史的数据没法横向比较。一般做法是先用固定波形做一段预循环，再开始正式测量，预循环条件写进实验记录。wake-up 之后器件进入平台期，继续循环则走向疲劳，见[[耐久与疲劳]]；更完整的背景见[[HZO 反铁电研究要点]]。</p>"
+  },
+  {
+    id: "endurance",
+    title: "耐久与疲劳",
+    category: "铁电存储",
+    date: "2026-11-16",
+    tags: ["endurance", "fatigue", "imprint"],
+    body:
+"<p>这三个词经常被混着用，其实说的是不同的事。<strong>Endurance（耐久）</strong>是一个指标：器件在反复翻转下能维持可区分极化状态的循环次数上限，通常以 2Pr 跌破某个判据或器件击穿为终点。<strong>Fatigue（疲劳）</strong>是一个过程：循环中可开关极化逐渐衰减，回线越测越扁。<strong>Imprint（印记）</strong>则是回线沿电压轴的偏移——器件“记住”了长期所处的极化态，矫顽场变得不对称，往回翻更难，多在保持或烘烤后考察，和前两者不是一回事。</p>" +
+"<h2>HZO 的典型演化曲线</h2>" +
+"<p>一只 HZO 电容的 2Pr 随循环次数往往走三段：先是[[唤醒效应]]带来的上升段，然后是相对稳定的平台，最后进入 fatigue 下降段，直到漏电增大或硬击穿收尾。报 endurance 数字时只报总循环数意义不大，必须同时说明循环波形的幅值、频率和脉宽——幅值越高翻得越彻底，但退化也越快，两组条件不同的数据不能直接比大小。</p>" +
+"<h2>测试时关注什么</h2>" +
+"<p>常见做法是循环应力与读出交替进行：打一段循环脉冲，停下来用[[P–E 测试设置]]里说的 PUND 读一次开关极化，对数间隔取点，画出 2Pr–循环次数曲线。失效判据要事先定好（比如 2Pr 跌到平台值的一半），中途还要留意漏电流是否异常抬升——很多样品的终点不是极化衰减而是击穿，先漏起来往往就是前兆。反铁电样品因为每次循环都跨越相变，应力条件对结果更敏感，读[[反铁电电容的双电滞回线]]时提到的转变场漂移也可以在耐久测试里顺带跟踪。</p>"
+  },
+  {
+    id: "extraction",
+    title: "P–E 回线参数提取",
+    category: "实验方法",
+    date: "2026-11-20",
+    tags: ["P–E 回线", "参数提取"],
+    body:
+"<p>从一条 P–E 回线里读数，先决条件是回线本身可信：器件已经过预循环进入稳定状态（见[[唤醒效应]]），回线达到饱和，测试的频率和幅值有记录。没饱和的回线（minor loop）读出的 Pr、矫顽场都偏小，和饱和回线的数据放一起比较是常见的错误来源。</p>" +
+"<h2>铁电回线：2Pr 与矫顽场</h2>" +
+"<p>常规铁电单回线读三个量：正、负剩余极化 Pr<sup>+</sup>、Pr<sup>−</sup>，两者之差记为 2Pr，是最常用的可开关极化指标；矫顽场 Ec 取极化过零点的场强，正负两侧不对称时分别报告，其偏移量对应 imprint 的程度。若回线被漏电流污染（高场端翘起、回线发胖），要先扣除线性介电与漏电贡献，或者改用 PUND 得到的开关电荷来算，原理见[[P–E 测试设置]]。</p>" +
+"<h2>反铁电双回线：转变场怎么定</h2>" +
+"<p>双回线在零场处极化近零，报 2Pr 没有意义，通常报告最大极化 Pmax 和两个转变场。E_AF、E_FA 的取法有两种：一是取 I–E 曲线上开关电流峰对应的场强，物理意义最直接；二是取 P–E 陡升段斜率最大点（即 dP/dE 峰值）。两种取法数值略有差别，用哪种要在记录里写明，同批数据保持一致。回线形状和各量的定义见[[反铁电电容的双电滞回线]]。</p>" +
+"<p>还有一个容易忽略的点：提取结果对频率敏感，频率变了矫顽场和转变场都会动。所以参数表里除了数值本身，频率、幅值、波形（三角波还是脉冲）和循环历史这四项应该和数据绑在一起存，缺了哪项，这组数就只能自用、不能引用。</p>"
+  },
+  {
+    id: "test-setup",
+    title: "P–E 测试设置",
+    category: "实验方法",
+    date: "2026-11-15",
+    tags: ["PUND", "DHM", "测试"],
+    body:
+"<p>测 P–E 回线最常用的两种方法是 DHM 和 PUND，区别在于能不能把开关电流从一堆非开关贡献里分离出来。<strong>DHM</strong>（dynamic hysteresis measurement）直接对器件加连续三角波，测总电流积分得极化，得到的就是教科书上的回线，简单直观；但总电流里混着线性介电响应和漏电流，漏电大的样品回线会发胖、翘尾，读出的 Pr 偏大。<strong>PUND</strong> 用一串脉冲：第一个正脉冲 P 包含开关＋非开关响应，紧接着的第二个同向脉冲 U 只剩非开关响应（极化已经翻过去了），两者相减得到纯开关电荷；负向同理用 N、D 两个脉冲。这样提取的开关极化干净得多，代价是拿不到连续回线的形状。</p>" +
+"<h2>频率与幅值</h2>" +
+"<p>幅值的原则是“足够饱和、不过量”：太小测到的是 minor loop，参数偏小（见[[P–E 回线参数提取]]）；太大则加速退化甚至直接击穿，尤其是做[[耐久与疲劳]]时幅值就是寿命的第一变量。频率同样要固定并记录：HZO 薄膜常用 kHz 量级，频率升高时畴翻转跟不上，表观矫顽场增大、回线变宽，换频率测的数据不能直接对比。波形形状（三角波、正弦波、脉冲）也要注明，脉冲测法里脉宽和间隔相当于另一种频率定义。</p>" +
+"<h2>其他注意事项</h2>" +
+"<p>极化是电荷除以电极面积，面积量错、或者探针只压住一部分电极，极化值会整体偏移，拍照留档电极形貌是个好习惯。正式测量前先决定要不要预循环做 wake-up，并把循环数写进文件名或实验记录。最后，DHM 和 PUND 不是二选一：常规流程是先用 DHM 看回线形状有没有异常（捏合、偏移、翘尾），再用 PUND 取可信的开关极化数值，两者结合才是一次完整的表征。</p>"
+  },
+  {
+    id: "hzo-review",
+    title: "HZO 反铁电研究要点",
+    category: "论文笔记",
+    date: "2026-11-12",
+    tags: ["HZO", "反铁电", "综述"],
+    body:
+"<p>这篇是综述式笔记，只梳理 HZO 反铁电方向公认的研究脉络，具体数值以原始文献为准，不在这里转录。起点是 2011 年前后掺杂 HfO<sub>2</sub> 薄膜中铁电性的报道：HfO<sub>2</sub> 本是高 k 栅介质的主力材料，与 CMOS 工艺天然兼容，又能在十纳米量级保持极性相，这两点让它迅速区别于传统钙钛矿铁电体，成为此后十多年铁电存储研究的主线材料。Zr 掺入 HfO<sub>2</sub> 构成 HZO 固溶体后，通过调节 Hf:Zr 比例、膜厚和退火条件，可以在铁电与反铁电行为之间移动——Zr 含量偏高时薄膜更倾向于呈现[[反铁电电容的双电滞回线]]。</p>" +
+"<h2>研究主线</h2>" +
+"<p>围绕 AFE-HZO 的工作大致沿三条线展开。第一条是<strong>相结构调控</strong>：反铁电行为一般归因于非极性四方相在电场下转变成极性正交相，研究集中在如何用成分、应力、晶粒尺寸和电极约束稳定四方相、并压低转变场。第二条是<strong>回线工程</strong>：目标是让双回线更瘦、更陡——ΔE 小意味着相变损耗低，转变场低意味着工作电压低，两者都直接决定器件可用性。第三条是<strong>可靠性</strong>：AFE 器件每次读写都要经历一次完整相变，[[唤醒效应]]、[[耐久与疲劳]]的表现都与铁电样品不完全相同，需要单独建立测试与失效分析的方法。</p>" +
+"<h2>还没解决的问题</h2>" +
+"<p>公认的难点有几个：相纯度难以直接表征，XRD 衍射峰重叠使四方相与正交相的定量区分一直有争议；转变场整体偏高，与低电压逻辑工艺的匹配不好；器件间一致性受晶粒尺度随机性影响明显；保持与耐久之间的折中也没有定论。这些问题决定了这个方向短期内仍以材料与机理研究为主，读新文献时先看它解决的是哪一条，再看数据是否支撑结论，是比较省力的读法。</p>"
+  }
+];
+
+/* ================= 索引与链接图 ================= */
+var byId = {}, byTitle = {};
+NOTES.forEach(function(n){ byId[n.id] = n; byTitle[n.title] = n; });
+
+function extractLinks(note){
+  var out = [], seen = {}, re = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g, m;
+  while ((m = re.exec(note.body)) !== null){
+    var t = m[1].trim();
+    if (byTitle[t] && byTitle[t].id !== note.id && !seen[t]){ seen[t] = 1; out.push(byTitle[t].id); }
+  }
+  return out;
+}
+NOTES.forEach(function(n){ n.out = extractLinks(n); });
+function backlinksOf(id){
+  return NOTES.filter(function(n){ return n.out.indexOf(id) !== -1; }).map(function(n){ return n.id; });
+}
+
+/* ================= 渲染正文 ================= */
+function renderBody(html){
+  return html.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, function(_, title, label){
+    var t = byTitle[title.trim()];
+    var text = (label || title).trim();
+    if (t) return '<a class="wikilink" href="#note=' + t.id + '">' + text + '</a>';
+    return text;
+  });
+}
+function plainText(html){
+  return html.replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, "$1").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+function fmtDate(d){
+  var p = d.split("-");
+  return p[0] + " 年 " + parseInt(p[1],10) + " 月 " + parseInt(p[2],10) + " 日";
+}
+
+var currentId = "index";
+var currentTag = null;
+
+function renderExplorer(){
+  var nav = document.getElementById("explorer");
+  var html = "";
+  var home = byId["index"];
+  html += '<div class="root-link"><button class="note-link' + (currentId === "index" && !currentTag ? " active" : "") + '" data-go="index">' + home.title + '</button></div>';
+  var cats = [];
+  NOTES.forEach(function(n){ if (n.category && cats.indexOf(n.category) === -1) cats.push(n.category); });
+  cats.forEach(function(cat){
+    var items = NOTES.filter(function(n){ return n.category === cat; });
+    html += '<div class="folder" data-folder="' + cat + '">';
+    html += '<button class="folder-head" data-folder-toggle="' + cat + '" aria-expanded="true">' +
+      '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>' +
+      '<span>' + cat + '</span><span class="count">' + items.length + '</span></button>';
+    html += '<div class="folder-items">';
+    items.forEach(function(n){
+      html += '<button class="note-link' + (currentId === n.id && !currentTag ? " active" : "") + '" data-go="' + n.id + '">' + n.title + '</button>';
+    });
+    html += '</div></div>';
+  });
+  nav.innerHTML = html;
+}
+
+function renderGraph(){
+  /* 手工布局的节点坐标（viewBox 288 x 236），连线由双链关系自动生成 */
+  var pos = {
+    "index":       {x:144, y:30,  label:"首页",        dy:-10},
+    "double-loop": {x:66,  y:98,  label:"双电滞回线",  dy:16},
+    "wake-up":     {x:222, y:98,  label:"唤醒效应",    dy:16},
+    "extraction":  {x:52,  y:180, label:"参数提取",    dy:16},
+    "endurance":   {x:150, y:196, label:"耐久与疲劳",  dy:16},
+    "test-setup":  {x:238, y:180, label:"测试设置",    dy:16},
+    "hzo-review":  {x:144, y:118, label:"HZO 研究要点", dy:-11}
+  };
+  var edges = {}, lines = "";
+  NOTES.forEach(function(n){
+    n.out.forEach(function(t){
+      var key = [n.id, t].sort().join("|");
+      if (!edges[key]){ edges[key] = 1; }
+    });
+  });
+  Object.keys(edges).forEach(function(key){
+    var p = key.split("|"), a = pos[p[0]], b = pos[p[1]];
+    if (a && b) lines += '<line class="g-line" x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y + '"/>';
+  });
+  var nodes = "";
+  NOTES.forEach(function(n){
+    var p = pos[n.id]; if (!p) return;
+    var cur = n.id === currentId;
+    nodes += '<g>' +
+      (cur ? '<circle class="g-ring" cx="' + p.x + '" cy="' + p.y + '" r="9"/>' : "") +
+      '<circle class="g-node' + (cur ? " current" : "") + '" cx="' + p.x + '" cy="' + p.y + '" r="4.5"/>' +
+      '<text class="g-label" x="' + p.x + '" y="' + (p.y + p.dy) + '">' + p.label + '</text>' +
+      '<circle class="g-hit" cx="' + p.x + '" cy="' + p.y + '" r="13" data-go="' + n.id + '"><title>' + n.title + '</title></circle>' +
+      '</g>';
+  });
+  document.getElementById("graphBox").innerHTML =
+    '<svg viewBox="0 0 288 236" role="img" aria-label="笔记关系图">' + lines + nodes + '</svg>';
+}
+
+function renderSidebars(note){
+  renderGraph();
+  var bl = backlinksOf(note.id);
+  document.getElementById("backlinks").innerHTML = bl.length
+    ? bl.map(function(id){ return '<li><a href="#note=' + id + '">' + byId[id].title + '</a></li>'; }).join("")
+    : '<li class="empty">暂无笔记引用这一篇。</li>';
+  document.getElementById("outlinks").innerHTML = note.out.length
+    ? note.out.map(function(id){ return '<li><a href="#note=' + id + '">' + byId[id].title + '</a></li>'; }).join("")
+    : '<li class="empty">这一篇还没有引用其他笔记。</li>';
+  var tagSet = [];
+  NOTES.forEach(function(n){ n.tags.forEach(function(t){ if (tagSet.indexOf(t) === -1) tagSet.push(t); }); });
+  document.getElementById("allTags").innerHTML = tagSet.map(function(t){
+    return '<button class="tag" data-tag="' + t + '">#' + t + '</button>';
+  }).join("");
+}
+
+function renderNote(id){
+  var note = byId[id] || byId["index"];
+  currentId = note.id; currentTag = null;
+  document.title = note.title + " · 研究笔记本";
+  document.getElementById("crumb").innerHTML = note.category
+    ? '<a href="#note=index">研究笔记本</a><span class="sep">/</span>' + note.category + '<span class="sep">/</span>' + note.title
+    : '<a href="#note=index">研究笔记本</a><span class="sep">/</span>' + note.title;
+  document.getElementById("noteTitle").textContent = note.title;
+  var chars = plainText(note.body).length;
+  document.getElementById("noteMeta").innerHTML =
+    '<span>' + fmtDate(note.date) + ' 更新</span>' +
+    '<span>约 ' + chars + ' 字</span>' +
+    '<span class="tags">' + note.tags.map(function(t){ return '<button class="tag" data-tag="' + t + '">#' + t + '</button>'; }).join("") + '</span>';
+  document.getElementById("noteBody").innerHTML = renderBody(note.body);
+
+  var extra = "";
+  if (note.id === "index"){
+    var sorted = NOTES.filter(function(n){ return n.id !== "index"; }).slice().sort(function(a,b){ return b.date < a.date ? -1 : 1; });
+    extra = '<h2 class="section-head">最近更新</h2><ul class="recent-list">' + sorted.map(function(n){
+      return '<li><span><a href="#note=' + n.id + '">' + n.title + '</a><span class="r-cat"> · ' + n.category + '</span></span><span class="r-date">' + n.date + '</span></li>';
+    }).join("") + '</ul>';
+  }
+  document.getElementById("noteExtra").innerHTML = extra;
+  document.getElementById("footUpdated").textContent = "最后更新：" + note.date;
+  renderExplorer();
+  renderSidebars(note);
+  window.scrollTo(0, 0);
+}
+
+function renderTag(tag){
+  currentTag = tag;
+  document.title = "#" + tag + " · 研究笔记本";
+  document.getElementById("crumb").innerHTML =
+    '<a href="#note=index">研究笔记本</a><span class="sep">/</span>标签<span class="sep">/</span>' + tag;
+  document.getElementById("noteTitle").textContent = "标签：" + tag;
+  var list = NOTES.filter(function(n){ return n.tags.indexOf(tag) !== -1; });
+  document.getElementById("noteMeta").innerHTML = '<span>共 ' + list.length + ' 篇笔记</span>';
+  document.getElementById("noteBody").innerHTML =
+    '<ul class="tag-listing">' + list.map(function(n){
+      return '<li><a href="#note=' + n.id + '">' + n.title + '</a>' +
+        (n.category ? '<span class="t-cat">' + n.category + '</span>' : '') +
+        '<div style="font-size:.86rem;color:var(--text-2)">' + plainText(n.body).slice(0, 90) + '…</div></li>';
+    }).join("") + '</ul>';
+  document.getElementById("noteExtra").innerHTML = "";
+  document.getElementById("footUpdated").textContent = "";
+  renderExplorer();
+  document.getElementById("backlinks").innerHTML = '<li class="empty">标签页没有反向链接。</li>';
+  document.getElementById("outlinks").innerHTML = '<li class="empty">—</li>';
+  window.scrollTo(0, 0);
+}
+
+/* ================= 导航 ================= */
+function navigate(){
+  var h = location.hash || "";
+  var m = h.match(/note=([\w-]+)/);
+  var t = h.match(/tag=(.+)/);
+  if (t){ renderTag(decodeURIComponent(t[1])); return; }
+  renderNote(m ? m[1] : "index");
+}
+window.addEventListener("hashchange", navigate);
+
+document.addEventListener("click", function(e){
+  var go = e.target.closest("[data-go]");
+  if (go){ location.hash = "note=" + go.getAttribute("data-go"); return; }
+  var tagBtn = e.target.closest("[data-tag]");
+  if (tagBtn){ location.hash = "tag=" + encodeURIComponent(tagBtn.getAttribute("data-tag")); return; }
+  var tog = e.target.closest("[data-folder-toggle]");
+  if (tog){
+    var folder = tog.closest(".folder");
+    var closed = folder.classList.toggle("closed");
+    tog.setAttribute("aria-expanded", closed ? "false" : "true");
+  }
+});
+
+/* ================= 搜索 ================= */
+var searchInput = document.getElementById("searchInput");
+var searchResults = document.getElementById("searchResults");
+function closeSearch(){ searchResults.classList.remove("open"); searchResults.innerHTML = ""; }
+searchInput.addEventListener("input", function(){
+  var q = searchInput.value.trim().toLowerCase();
+  if (!q){ closeSearch(); return; }
+  var hits = NOTES.filter(function(n){
+    return n.title.toLowerCase().indexOf(q) !== -1 ||
+           n.category.toLowerCase().indexOf(q) !== -1 ||
+           n.tags.join(" ").toLowerCase().indexOf(q) !== -1 ||
+           plainText(n.body).toLowerCase().indexOf(q) !== -1;
+  });
+  if (!hits.length){
+    searchResults.innerHTML = '<div class="r-none">没有找到包含「' + searchInput.value.trim() + '」的笔记。</div>';
+  } else {
+    searchResults.innerHTML = hits.map(function(n){
+      var txt = plainText(n.body);
+      var i = txt.toLowerCase().indexOf(q);
+      var snip = i > 10 ? "…" + txt.slice(i - 10, i + 42) + "…" : txt.slice(0, 52) + "…";
+      return '<button data-go="' + n.id + '" role="option"><span class="r-title">' + n.title +
+        (n.category ? ' <span style="color:var(--text-3);font-weight:400">· ' + n.category + '</span>' : '') +
+        '</span><span class="r-snip">' + snip + '</span></button>';
+    }).join("");
+  }
+  searchResults.classList.add("open");
+});
+searchInput.addEventListener("keydown", function(e){
+  if (e.key === "Enter"){
+    var first = searchResults.querySelector("button[data-go]");
+    if (first){ location.hash = "note=" + first.getAttribute("data-go"); closeSearch(); searchInput.blur(); }
+  }
+  if (e.key === "Escape"){ closeSearch(); }
+});
+document.addEventListener("click", function(e){
+  if (!e.target.closest(".search")) closeSearch();
+  if (e.target.closest(".search-results")) closeSearch();
+});
+document.addEventListener("keydown", function(e){
+  if (e.key === "/" && document.activeElement !== searchInput && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){
+    e.preventDefault(); searchInput.focus();
+  }
+});
+
+/* ================= 启动 ================= */
+document.getElementById("noteCount").textContent = NOTES.length;
+navigate();
+</script>
+</body>
+</html>
